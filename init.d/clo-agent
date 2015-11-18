@@ -4,10 +4,10 @@
 # description: myapp daemon
 # processname: myapp
 
-DAEMON_PATH="/opt/clo-agent"
+DAEMON_PATH="/opt/cloclo-agent"
 
 DAEMON=clo-agent.rb
-DAEMONOPTS="-k a18d4d9ded66ca12c819 -n agent-test"
+DAEMONOPTS=""
 
 NAME=clo-agent
 DESC="Clo-clo Agent"

@@ -6,8 +6,8 @@
 require 'rubygems' if RUBY_VERSION < '1.9.0'
 require 'rest-client'
 require 'json'
-require 'trollop'
 require 'rufus-scheduler'
+require 'yaml'
 
 scheduler = Rufus::Scheduler.new
 
@@ -62,30 +62,25 @@ def get_cpu_stats
     return free_ram*100/total_ram
   end
 
-  def parse_options
-    opts = Trollop::options do
-      version "clo-clo agent 1.0.0"
-      banner <<-EOS
-Usage:
-	clo-agent.rb -k <cloclo_api_key> -n <node_name>
-EOS
-      opt :key, "Cloclo api key", :type => :string
-      opt :name, "Node name", :type => :string
-    end
-    Trollop::die :name, "node name is required" if !opts[:name] 
-    Trollop::die :key, "API key is required" if !opts[:key] 
-    return opts
+def read_config
+  if  File.exist?('clo-agent.yaml')
+    config = YAML.load_file("clo-agent.yaml")
+    return config
+  else 
+    abort("clo-agent.yaml not found")
   end
+end
 
-opts = parse_options
+config = read_config
 
-scheduler.in '60s' do
+scheduler.every '60s' do
+  puts "starting send"
   percents_left = get_memory_pct
   web_connections = `netstat -anp | grep nginx | grep ESTABLISHED | wc -l`
   cpu_total = get_cpu_metrics.split(' ')[0].split('=')[1]
 
-  jdata = {:key => opts[:key], 
-           :node => opts[:name], 
+  jdata = {:key => config["config"]["key"], 
+           :node => config["config"]["node"], 
            :ram_usage => "#{percents_left}", 
            :cpu_total => "#{cpu_total}", 
            :http_conn => "#{web_connections.chop}"}
